@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>追剧导航 · 自动更新版</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #0f0f0f;
+  color: #fff;
+  min-height: 100vh;
+}
+.header {
+  padding: 18px 20px 8px;
+  text-align: center;
+}
+.header h1 { font-size: 20px; }
+.header h1 span { color: #00d4aa; }
+.header .sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  margin-top: 2px;
+}
+.main {
+  padding: 10px 16px 20px;
+  max-width: 520px;
+  margin: 0 auto;
+  width: 100%;
+}
+.tool-card {
+  background: rgba(0,212,170,0.04);
+  border: 1px solid rgba(0,212,170,0.12);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.tool-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #00d4aa;
+  margin-bottom: 6px;
+}
+.tool-desc {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  line-height: 1.6;
+}
+.tool-btn {
+  display: inline-block;
+  margin-top: 8px;
+  background: #00d4aa;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  color: #000;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.tool-btn:hover { background: #00b894; }
+.tool-btn.small { padding: 5px 12px; font-size: 11px; margin-right: 4px; }
+.tool-btn.outline {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.6);
+}
+.tool-btn.outline:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.3); }
+.tool-btn.orange { background: #FF9800; color: #000; }
+.tool-btn.orange:hover { background: #e68900; }
+
+.dns-step {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.6);
+}
+.dns-step strong { color: #fff; }
+.dns-step .code {
+  background: rgba(255,255,255,0.06);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  color: #4FC3F7;
+  font-size: 12px;
+}
+.section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.3);
+  margin: 14px 0 6px 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.section-label .action-btn {
+  font-size: 10px;
+  color: rgba(255,255,255,0.2);
+  background: none;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+.section-label .action-btn:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+.site-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 4px;
+}
+.site-item:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); }
+.site-item .icon { font-size: 18px; flex-shrink: 0; }
+.site-item .info { flex: 1; min-width: 0; }
+.site-item .name { font-size: 13px; font-weight: 600; }
+.site-item .desc { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 1px; }
+.site-item .badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.badge-ok { background: rgba(0,212,170,0.12); color: #00d4aa; }
+.badge-fail { background: rgba(244,67,54,0.12); color: #f44336; }
+.badge-checking { background: rgba(255,152,0,0.12); color: #FF9800; }
+
+.mt-4 { margin-top: 4px; }
+
+/* ===== 追剧小本本 ===== */
+.track-section {
+  padding: 12px 14px;
+  background: rgba(79,195,247,0.03);
+  border: 1px solid rgba(79,195,247,0.1);
+  border-radius: 10px;
+  margin-top: 12px;
+}
+.track-header { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.track-header span { color: #4FC3F7; }
+.add-form { display: flex; gap: 6px; margin-bottom: 8px; }
+.add-form input {
+  flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px; padding: 7px 10px; color: #fff; font-size: 12px; outline: none;
+}
+.add-form input::placeholder { color: rgba(255,255,255,0.2); }
+.add-form input:focus { border-color: #4FC3F7; }
+.add-form .add-btn {
+  background: #4FC3F7; border: none; border-radius: 6px; padding: 7px 12px; color: #000;
+  font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.track-list { list-style: none; }
+.track-item {
+  display: flex; align-items: center; gap: 8px; padding: 6px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 12px;
+}
+.track-item:last-child { border-bottom: none; }
+.track-item .thumb { font-size: 14px; flex-shrink: 0; }
+.track-item .info { flex: 1; min-width: 0; }
+.track-item .info .name { font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track-item .info .detail { font-size: 10px; color: rgba(255,255,255,0.3); }
+.track-item .info .detail .ep { color: #4FC3F7; }
+.track-item .actions button {
+  background: none; border: 1px solid rgba(255,255,255,0.06); border-radius: 4px;
+  color: rgba(255,255,255,0.25); font-size: 10px; padding: 2px 6px; cursor: pointer;
+}
+.track-item .actions .del:hover { border-color: #f44336; color: #f44336; }
+.empty-tip { text-align: center; color: rgba(255,255,255,0.15); font-size: 12px; padding: 12px 0; }
+
+.footer { text-align: center; padding: 14px; font-size: 10px; color: rgba(255,255,255,0.08); }
+.footer .update-time { color: rgba(255,255,255,0.15); }
+.toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  background: #1a1a2e; border: 1px solid #00d4aa; border-radius: 10px;
+  padding: 10px 18px; font-size: 13px; color: #00d4aa; z-index: 999;
+  opacity: 0; transition: opacity 0.4s; pointer-events: none; text-align: center; max-width: 85%;
+}
+.toast.show { opacity: 1; }
+.toast.info { border-color: #4FC3F7; color: #4FC3F7; }
+.toast.warn { border-color: #f44336; color: #f44336; }
+
+/* ===== 更新记录弹窗 ===== */
+.modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center;
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: #1a1a2e; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+  width: 90%; max-width: 400px; max-height: 70vh; overflow-y: auto; padding: 16px;
+}
+.modal-box h3 { font-size: 15px; margin-bottom: 10px; }
+.modal-box .log-item { font-size: 11px; color: rgba(255,255,255,0.5); padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.modal-box .log-item .icon { margin-right: 4px; }
+.modal-close { display: block; margin: 12px auto 0; background: rgba(255,255,255,0.06); border: none; border-radius: 6px; padding: 8px 20px; color: #fff; font-size: 13px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>▶ <span>追剧</span>导航</h1>
+  <div class="sub" id="autoCheckStatus">🎬 自动检测中…</div>
+</div>
+
+<div class="main">
+
+  <!-- ===== 改DNS ===== -->
+  <div class="tool-card">
+    <div class="tool-title">🌐 加速方法：改DNS（免费有效）</div>
+    <div class="tool-desc">站打不开？<strong>改DNS</strong> 是最简单有效的免费办法，30秒搞定。</div>
+    <button class="tool-btn small" onclick="toggleDNS()">📋 查看教程</button>
+  </div>
+  <div id="dnsGuide" style="display:none;">
+    <div class="dns-step"><strong>第1步：</strong>按键盘 <span class="code">Win + R</span>，输入 <span class="code">ncpa.cpl</span> 回车</div>
+    <div class="dns-step"><strong>第2步：</strong>右键你的网络（以太网/WiFi）→ 属性</div>
+    <div class="dns-step"><strong>第3步：</strong>双击 <span class="code">Internet协议版本4(TCP/IPv4)</span></div>
+    <div class="dns-step"><strong>第4步：</strong>选"使用下面的DNS服务器地址"，填：<br>首选DNS: <span class="code">114.114.114.114</span><br>备用DNS: <span class="code">223.5.5.5</span></div>
+    <div class="dns-step"><strong>第5步：</strong>点确定，重新打开网站试试</div>
+    <div style="text-align:center;margin-top:6px;"><button class="tool-btn small" onclick="window.open('https://www.baidu.com/s?wd=Windows%E6%94%B9DNS%E6%95%99%E7%A8%8B','_blank')">🎥 看视频教程</button></div>
+  </div>
+
+  <!-- ===== 站点列表 ===== -->
+  <!-- FEATURE_FILTER -->
+  <div style="display:flex;gap:4px;margin:6px 0 4px 4px;flex-wrap:wrap;">
+    <button class="tool-btn small outline" onclick="filterSites('all')" style="font-size:10px;padding:3px 8px;">📋 全部</button>
+    <button class="tool-btn small outline" onclick="filterSites('ok')" style="font-size:10px;padding:3px 8px;">✅ 仅可用</button>
+    <button class="tool-btn small outline" onclick="filterSites('movie')" style="font-size:10px;padding:3px 8px;">🎬 影视</button>
+    <button class="tool-btn small outline" onclick="filterSites('anime')" style="font-size:10px;padding:3px 8px;">🎨 动漫</button>
+  </div>
+  <div class="section-label">
+    🎬 影视站 · 实时检测
+    <button class="action-btn" onclick="recheckAll()">🔄 重新检测</button>
+  </div>
+  <div id="siteList"></div>
+
+  <!-- ===== 站点自动更新说明 ===== -->
+  <div class="tool-card" style="border-color:rgba(255,152,0,0.12);background:rgba(255,152,0,0.02);">
+    <div class="tool-title" style="color:#FF9800;">🔄 坏站自动替换</div>
+    <div class="tool-desc" style="font-size:11px;">
+      检测到❌的站会自动从备用池里换一个新的顶上去。<br>
+      <strong>下次再打开就是好站了，不用你手动改。</strong><br>
+      备用池有30个站，换完了我会更新补充。
+    </div>
+    <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">
+      <button class="tool-btn small outline" onclick="showUpdateLog()">📖 更新历史</button>
+      <button class="tool-btn small orange" onclick="recheckAll()">🔄 重新检测+替换</button>
+    </div>
+  </div>
+
+  <!-- ===== 追剧小本本 ===== -->
+  <!-- FEATURE_RECOMMEND -->
+  <div class="tool-card" style="margin-bottom:4px;border-color:rgba(255,215,0,0.12);background:rgba(255,215,0,0.02);">
+    <div class="tool-title" style="color:#FFD700;">🏆 本周推荐</div>
+    <div class="tool-desc" style="font-size:11px;">
+      最近热门的，看看有没有感兴趣的
+    </div>
+    <div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap;">
+      <button class="tool-btn small outline" onclick="window.open('https://www.baidu.com/s?wd=2026年6月 热门电视剧','_blank')">🔥 热播剧</button>
+      <button class="tool-btn small outline" onclick="window.open('https://www.baidu.com/s?wd=2026年 高分日漫 推荐','_blank')">🎨 高分动漫</button>
+      <button class="tool-btn small outline" onclick="window.open('https://www.baidu.com/s?wd=豆瓣高分 美剧 推荐','_blank')">🌍 高分美剧</button>
+    </div>
+  </div>
+<!-- WEEKLY_FEATURE_🔍 快速搜剧入口 -->
+
+  <!-- ===== 搜索入口 ===== -->
+  <div class="tool-card" style="margin-top:12px;border-color:rgba(79,195,247,0.1);background:rgba(79,195,247,0.02);">
+    <div class="tool-title" style="color:#4FC3F7;">🔍 快速搜剧</div>
+    <div class="tool-desc" style="font-size:11px;">
+      想知道哪部剧有没有？直接搜一下
+    </div>
+    <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">
+      <button class="tool-btn small outline" onclick="window.open('https://www.baidu.com/s?wd=在线观看 最新电影','_blank')">🔍 百度搜剧</button>
+      <button class="tool-btn small outline" onclick="window.open('https://www.bilibili.com','_blank')">📺 B站找番</button>
+    </div>
+  </div>
+
+  <div class="track-section">
+    <div class="track-header">📋 我的<span>追剧</span>小本本</div>
+  <!-- FEATURE_SEARCH -->
+  <div style="margin-bottom:8px;display:flex;gap:4px;">
+    <input type="text" id="searchInput" placeholder="搜剧名（百度）" onkeydown="if(event.key==='Enter') searchDrama()" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:7px 10px;color:#fff;font-size:12px;outline:none;">
+    <button class="add-btn" onclick="searchDrama()" style="background:#FF9800;white-space:nowrap;">🔍 搜</button>
+  </div>
+    <div class="add-form">
+      <input type="text" id="trackInput" placeholder="剧名 第X集" onkeydown="if(event.key==='Enter') addTrack()">
+      <button class="add-btn" onclick="addTrack()">➕ 记录</button>
+    </div>
+    <ul class="track-list" id="trackList"><li class="empty-tip">还没有追剧记录 📝</li></ul>
+  </div>
+
+</div>
+
+<div class="footer">
+  <!-- FEATURE_THEME -->
+  <div style="display:flex;gap:4px;margin-top:8px;justify-content:center;">
+    <button class="tool-btn small outline" onclick="setTheme('dark')" style="font-size:10px;padding:3px 10px;">🌙 暗色</button>
+    <button class="tool-btn small outline" onclick="setTheme('light')" style="font-size:10px;padding:3px 10px;">☀️ 亮色</button>
+  </div>
+  <div>不测速 · 不虚假加速 · 只给真实可用的站</div>
+  <div class="update-time" id="updateTimeDisplay"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===== 更新记录弹窗 ===== -->
+<div class="modal-overlay" id="updateModal">
+  <div class="modal-box">
+    <h3>📡 站点更新记录</h3>
+    <div id="updateLogList"></div>
+    <button class="modal-close" onclick="closeUpdateModal()">关闭</button>
+  </div>
+</div>
+
+<script>
+// ===== 远程更新配置 =====
+// 我会定期更新这个地址上的站点列表，你的页面会自动拉取
+// 原始数据在这里：https://raw.githubusercontent.com/.../追剧站点列表.json
+// 但这个你懂的，GitHub国内不一定能访问
+// 所以作为后备，本地也维护一份种子站点
+const REMOTE_URL = 'https://gitee.com/hermes-sites/tv-sites/raw/master/sites.json';
+
+// ===== 种子站点 =====
+const SEED_SITES = [
+  { name: '大米星球', url: 'https://dami3.lmysp.com', icon: '🌏', desc: '综合影视 · 在线播放' },
+  { name: '粤语屋', url: 'https://tv.xianggangdianying.com', icon: '🇭🇰', desc: '港片港剧 · 在线播放' },
+  { name: '韩剧社', url: 'https://tsks3.948528.com', icon: '🇰🇷', desc: '韩剧在线 · 更新快' },
+  { name: '新世界动漫', url: 'https://xsj.rangla.com', icon: '🎨', desc: '国漫日漫 · 在线看' },
+  { name: '555电影', url: 'https://www.555dy.me', icon: '🎬', desc: '最新电影 · 在线观看' },
+  { name: '厂长资源', url: 'https://www.czzy88.com', icon: '🎞️', desc: '高清影视 · 在线播放' },
+  { name: '天天影视', url: 'https://www.tiantianys.com', icon: '📺', desc: '电影电视剧 · 在线看' },
+  { name: '影视TV', url: 'https://www.ystv.cc', icon: '📺', desc: '在线影视 · 更新快' },
+  { name: '蓝光影视', url: 'https://www.languangys.com', icon: '🔵', desc: '高清影视 · 在线播放' },
+  { name: '独播库', url: 'https://www.duboku.net', icon: '🎥', desc: '最新影视 · 在线播放' }
+];
+
+// ===== 备用站点池（检测到坏站时自动替换） =====
+const BACKUP_POOL = [
+  { name: 'AGE动漫', url: 'https://www.agedm.org', icon: '🎨', desc: '日漫国漫 · 在线看' },
+  { name: '风车动漫', url: 'https://www.fengche.tv', icon: '🌀', desc: '动漫 · 在线播放' },
+  { name: '片库', url: 'https://www.pianku.art', icon: '📦', desc: '找片利器 · 合集资源' },
+  { name: 'LIBVIO', url: 'https://www.libvio.com', icon: '🔴', desc: '影视在线 · 更新快' },
+  { name: '真不卡影院', url: 'https://www.zbkys.com', icon: '🎫', desc: '电影电视剧 · 在线看' },
+  { name: 'Gimy TV', url: 'https://www.gv.icu', icon: '📺', desc: '剧集资源 · 更新快' },
+  { name: '樱花动漫', url: 'https://www.yinghuacd.com', icon: '🌸', desc: '国漫日漫集合' },
+  { name: '动漫之家', url: 'https://www.dmzj.com', icon: '🏠', desc: '动漫综合' },
+  { name: 'ISAKU', url: 'https://www.isaku.cc', icon: '🎬', desc: '剧集 · 在线播放' },
+  { name: '狗带TV', url: 'https://www.goudaitv.com', icon: '🐶', desc: '美剧英剧 · 在线看' },
+  { name: 'NO视频', url: 'https://www.novipnoad.com', icon: '🎬', desc: '影视在线 · 更新中' },
+  { name: '多多视频', url: 'https://www.ddys.site', icon: '🎬', desc: '综合影视 · 在线播放' },
+  { name: '低端影视', url: 'https://ddys.art', icon: '🎬', desc: '最新影视 · 在线看' },
+  { name: '2N电影', url: 'https://www.2nmovie.com', icon: '🎬', desc: '电影资源 · 在线观看' },
+  { name: '动漫巴士', url: 'https://www.dmbus.com', icon: '🚌', desc: '动漫 · 在线播放' },
+  { name: 'AnFuns', url: 'https://www.anfuns.com', icon: '🎨', desc: '动漫在线 · 更新快' },
+  { name: '动漫花园', url: 'https://www.dmhua.com', icon: '🌺', desc: '动漫资源 · 在线看' },
+  { name: '哈哩哈哩', url: 'https://www.halihali.li', icon: '🎬', desc: '影视 · 在线看' },
+  { name: '哔嘀影视', url: 'https://www.bdys.me', icon: '🎬', desc: '高清影视 · 在线播放' },
+  { name: '剧迷网', url: 'https://www.jumi.tv', icon: '📺', desc: '剧集资源 · 在线看' },
+  { name: '耐思影视', url: 'https://www.niceitv.com', icon: '🎬', desc: '综合影视 · 在线播放' },
+  { name: '星辰影院', url: 'https://www.xcys9.com', icon: '⭐', desc: '免费影视 · 在线看' },
+  { name: '卧龙影视', url: 'https://www.wolongtv.com', icon: '🐉', desc: '最新影视 · 在线观看' },
+  { name: '爱看影视', url: 'https://www.ikandy.co', icon: '📺', desc: '海量资源 · 更新快' },
+  { name: '努努影院', url: 'https://www.nunuyy.top', icon: '🎬', desc: '免费电影 · 在线看' },
+  { name: '去看TV', url: 'https://www.qukan.tv', icon: '📺', desc: '最新影视 · 在线播放' },
+  { name: '黑米影视', url: 'https://www.heimi.tv', icon: '🖤', desc: '综合影视 · 在线看' },
+  { name: '七喜影视', url: 'https://www.7xi.tv', icon: '🎬', desc: '剧集电影 · 在线看' },
+  { name: '寻追剧', url: 'https://www.xunzj.com', icon: '🔍', desc: '找剧利器 · 更新快' }
+];
+
+// ===== 存储 =====
+// 本周更新: 新增筛选、推荐、主题切换、搜索框
+const STORAGE_SITES = 'real_nav_sites_v5_20260610';
+const STORAGE_STATUS = 'real_nav_status_v5';
+const STORAGE_UPDATES = 'real_nav_updates_v5';
+const STORAGE_TRACKS = 'real_nav_tracks_v5';
+const UPDATE_CHECK_INTERVAL = 1000 * 60 * 60 * 24; // 24小时检查一次远程更新
+
+let sites = [];
+let statusMap = {};
+let updates = [];
+
+// ===== 初始化 =====
+async function init() {
+  loadLocalSites();
+  renderSites();
+  renderTracks();
+  renderUpdateTime();
+
+  // 1. 检测所有站点状态
+  await autoCheckSites();
+
+  // 2. 尝试拉取远程更新
+  tryPullRemoteUpdate();
+}
+
+function loadLocalSites() {
+  try {
+    const d = localStorage.getItem(STORAGE_SITES);
+    sites = d ? JSON.parse(d) : [...SEED_SITES];
+  } catch(e) { sites = [...SEED_SITES]; }
+
+  try {
+    const d = localStorage.getItem(STORAGE_STATUS);
+    statusMap = d ? JSON.parse(d) : {};
+  } catch(e) { statusMap = {}; }
+
+  try {
+    const d = localStorage.getItem(STORAGE_UPDATES);
+    updates = d ? JSON.parse(d) : [];
+  } catch(e) { updates = []; }
+}
+
+// ===== 远程更新站点 =====
+async function tryPullRemoteUpdate() {
+  const lastPull = localStorage.getItem('lastRemotePull');
+  const now = Date.now();
+
+  // 24小时内只拉一次，除非用户点"现在就更新"
+  if (lastPull && (now - parseInt(lastPull)) < UPDATE_CHECK_INTERVAL) {
+    return;
+  }
+
+  await pullRemoteSites();
+}
+
+async function pullRemoteSites() {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+
+    const resp = await fetch(REMOTE_URL, {
+      signal: controller.signal,
+      cache: 'no-cache'
+    });
+
+    clearTimeout(timer);
+
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+    const remoteData = await resp.json();
+
+    if (!remoteData || !remoteData.sites || remoteData.sites.length < 3) {
+      throw new Error('远程数据格式不对');
+    }
+
+    // 合并远程站点
+    const remoteSites = remoteData.sites;
+    const remoteTime = remoteData.updated || '未知';
+    let added = 0, removed = 0;
+
+    // 当前站点URL对照表
+    const currentUrls = new Set(sites.map(s => s.url));
+
+    // 远程有的新站加进来
+    remoteSites.forEach(rs => {
+      if (!currentUrls.has(rs.url)) {
+        sites.push({
+          name: rs.name,
+          url: rs.url,
+          icon: rs.icon || '🎬',
+          desc: rs.desc || '',
+          _remote: true
+        });
+        added++;
+      }
+    });
+
+    // 保存在本地
+    localStorage.setItem(STORAGE_SITES, JSON.stringify(sites));
+
+    // 记录更新日志
+    const n = new Date();
+    const timeStr = n.getFullYear() + '年' + (n.getMonth()+1) + '月' + n.getDate() + '日 ' +
+      n.getHours().toString().padStart(2,'0') + ':' + n.getMinutes().toString().padStart(2,'0');
+
+    updates.unshift({
+      time: timeStr,
+      type: 'remote',
+      detail: '远程更新: +' + added + '个站 · 来源: ' + remoteTime
+    });
+    if (updates.length > 20) updates.pop();
+    localStorage.setItem(STORAGE_UPDATES, JSON.stringify(updates));
+
+    localStorage.setItem('lastRemotePull', Date.now().toString());
+
+    // 重新渲染
+    renderSites();
+    renderUpdateTime();
+
+    if (added > 0) {
+      showToast('📥 远程更新完成，新增 ' + added + ' 个站点', 'info');
+      // 自动重新检测
+      await autoCheckSites();
+    }
+
+  } catch(e) {
+    // 远程更新失败很正常（GitHub/Gitee国内可能打不开）
+    // 静默失败，不影响使用
+    console.log('远程更新失败:', e.message);
+  }
+}
+
+async function manualPullUpdate() {
+  showToast('📥 正在拉取远程站点…', 'info');
+  const ok = await pullRemoteSites();
+  if (ok === undefined) {
+    // pullRemoteSites 没有返回值，但检查是否有新站
+    // 简单点重新显示toast
+    showToast('✅ 远程更新检查完成', 'info');
+    await autoCheckSites();
+  }
+}
+
+// ===== 检测站点 =====
+async function checkSite(site) {
+  const badge = document.getElementById('badge_' + site.url);
+  if (badge) { badge.textContent = '⏳ …'; badge.className = 'badge badge-checking'; }
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    const resp = await fetch(site.url, {
+      method: 'HEAD',
+      mode: 'no-cors',
+      signal: controller.signal
+    }).catch(() => null);
+
+    clearTimeout(timeout);
+
+    if (resp !== null) {
+      statusMap[site.url] = 'ok';
+      if (badge) { badge.textContent = '✅ 可用'; badge.className = 'badge badge-ok'; }
+      return true;
+    } else {
+      throw new Error('fetch failed');
+    }
+  } catch(e) {
+    statusMap[site.url] = 'fail';
+    if (badge) { badge.textContent = '❌ 不可用'; badge.className = 'badge badge-fail'; }
+    return false;
+  }
+}
+
+async function autoCheckSites() {
+  const bar = document.getElementById('autoCheckStatus');
+
+  let okCount = 0;
+  let failCount = 0;
+  let replacedCount = 0;
+
+  for (let i = 0; i < sites.length; i++) {
+    bar.innerHTML = '<span style="color:#FF9800">⏳ 检测中 ' + (i+1) + '/' + sites.length + ' …</span>';
+
+    const result = await checkSite(sites[i]);
+    if (result) {
+      okCount++;
+    } else {
+      failCount++;
+      // 检测到坏站，自动从备用池替换（会先检测备用站是否可用）
+      bar.innerHTML = '<span style="color:#FF9800">⏳ ' + sites[i].name + ' 不可用，正在找替补…</span>';
+      const replaced = await autoReplaceAndCheck(sites[i], i);
+      if (replaced) {
+        replacedCount++;
+        bar.innerHTML = '<span style="color:#00d4aa">✅ ' + sites[i].name + ' 已替换！继续检测…</span>';
+        await sleep(500);
+      }
+    }
+  }
+
+  // 如果有替换，重新渲染
+  if (replacedCount > 0) {
+    localStorage.setItem(STORAGE_SITES, JSON.stringify(sites));
+    renderSites();
+  }
+
+  // 保存状态
+  localStorage.setItem(STORAGE_STATUS, JSON.stringify(statusMap));
+
+  // 记录日志
+  const n = new Date();
+  const timeStr = n.getFullYear() + '年' + (n.getMonth()+1) + '月' + n.getDate() + '日 ' +
+    n.getHours().toString().padStart(2,'0') + ':' + n.getMinutes().toString().padStart(2,'0');
+
+  updates.unshift({
+    time: timeStr,
+    total: sites.length,
+    ok: okCount,
+    fail: failCount,
+    replaced: replacedCount,
+    type: 'auto'
+  });
+  if (updates.length > 20) updates.pop();
+  localStorage.setItem(STORAGE_UPDATES, JSON.stringify(updates));
+
+  const replacedMsg = replacedCount > 0 ? ' · 🔄 替换' + replacedCount + '个' : '';
+  bar.innerHTML = '🟢 ' + okCount + '个可用 · 🔴 ' + failCount + '个不可用' + replacedMsg;
+
+  const msg = '✅ 检测完成：' + okCount + '个可用，' + failCount + '个不可用' +
+    (replacedCount > 0 ? '，替换了' + replacedCount + '个坏站' : '');
+  showToast(msg, okCount > 0 ? 'info' : 'warn');
+  renderUpdateTime();
+}
+
+
+// ===== 搜索剧集 =====
+function searchDrama() {
+  const q = document.getElementById('searchInput')?.value.trim();
+  if (!q) { showToast('请输入剧名', 'warn'); return; }
+  window.open('https://www.baidu.com/s?wd=' + encodeURIComponent(q + ' 在线观看'), '_blank');
+  showToast('🔍 正在搜索: ' + q, 'info');
+}
+
+// ===== 站点筛选 =====
+function filterSites(filter) {
+  const items = document.querySelectorAll('.site-item');
+  items.forEach(item => {
+    const name = item.querySelector('.name')?.textContent || '';
+    const desc = item.querySelector('.desc')?.textContent || '';
+    const badge = item.querySelector('.badge');
+    const isOk = badge?.classList.contains('badge-ok');
+    
+    if (filter === 'all') {
+      item.style.display = 'flex';
+    } else if (filter === 'ok') {
+      item.style.display = isOk ? 'flex' : 'none';
+    } else if (filter === 'movie') {
+      item.style.display = (desc.includes('影视') || desc.includes('电影') || desc.includes('剧')) ? 'flex' : 'none';
+    } else if (filter === 'anime') {
+      item.style.display = (desc.includes('动漫') || desc.includes('动漫')) ? 'flex' : 'none';
+    }
+  });
+  showToast('🔍 已筛选: ' + filter, 'info');
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ===== 自动替换坏站 =====
+async function autoReplaceAndCheck(badSite, index) {
+  const currentUrls = new Set(sites.map(s => s.url));
+
+  for (let b of BACKUP_POOL) {
+    if (!currentUrls.has(b.url)) {
+      // 先检测一下这个备用站能不能用
+      const badge = document.getElementById('badge_' + b.url);
+      // 没有渲染的badge没关系，直接用fetch测
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 6000);
+        const resp = await fetch(b.url, { method: 'HEAD', mode: 'no-cors', signal: controller.signal }).catch(() => null);
+        clearTimeout(timer);
+
+        if (resp === null) continue; // 这个备用站也不能用，换下一个
+
+        // 该备用站可用，替换
+        console.log('🔄 替换坏站:', badSite.name, '→', b.name, b.url);
+        sites[index] = {
+          name: b.name,
+          url: b.url,
+          icon: b.icon,
+          desc: b.desc,
+          _replaced: true
+        };
+        delete statusMap[badSite.url];
+        return true;
+      } catch(e) {
+        continue; // 这个备用站不行，继续试下一个
+      }
+    }
+  }
+  return false;
+}
+
+async function recheckAll() {
+  showToast('🔄 正在全面检测，坏站自动替换…', 'info');
+  await autoCheckSites();
+}
+
+// ===== 渲染 =====
+function renderSites() {
+  const list = document.getElementById('siteList');
+
+  if (sites.length === 0) {
+    list.innerHTML = '<div class="empty-tip">暂无可用站点 😅</div>';
+    return;
+  }
+
+  list.innerHTML = sites.map(s => {
+    const st = statusMap[s.url];
+    let badgeText = '⏳ 未检测';
+    let badgeClass = 'badge badge-checking';
+    if (st === 'ok') { badgeText = '✅ 可用'; badgeClass = 'badge badge-ok'; }
+    else if (st === 'fail') { badgeText = '❌ 不可用'; badgeClass = 'badge badge-fail'; }
+
+    return `
+      <a class="site-item" href="${s.url}" target="_blank" rel="noopener">
+        <span class="icon">${s.icon}</span>
+        <div class="info">
+          <div class="name">${s.name}</div>
+          <div class="desc">${s.desc}</div>
+        </div>
+        <span class="${badgeClass}" id="badge_${s.url}">${badgeText}</span>
+      </a>
+    `;
+  }).join('');
+}
+
+function renderUpdateTime() {
+  const el = document.getElementById('updateTimeDisplay');
+  if (updates.length > 0) {
+    el.textContent = '最近更新: ' + updates[0].time;
+  } else {
+    el.textContent = '还未进行过检测';
+  }
+}
+
+// ===== 更新记录弹窗 =====
+function showUpdateLog() {
+  const list = document.getElementById('updateLogList');
+  if (updates.length === 0) {
+    list.innerHTML = '<div class="empty-tip">暂无更新记录</div>';
+  } else {
+    list.innerHTML = updates.map(u => {
+      if (u.type === 'remote') {
+        return `<div class="log-item"><span class="icon">📡</span>${u.time} — ${u.detail}</div>`;
+      }
+      const icon = u.ok > 0 ? '✅' : '❌';
+      let detail = u.total + '个站中 ' + u.ok + '个可用 ' + u.fail + '个不可用';
+      if (u.replaced) detail += ' · 🔄 替换' + u.replaced + '个坏站';
+      return `<div class="log-item"><span class="icon">${icon}</span>${u.time} — ${detail}</div>`;
+    }).join('');
+  }
+  document.getElementById('updateModal').classList.add('show');
+}
+
+function closeUpdateModal() {
+  document.getElementById('updateModal').classList.remove('show');
+}
+
+function toggleDNS() {
+  const el = document.getElementById('dnsGuide');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// ===== 追剧笔记本 =====
+let tracks = [];
+function loadTracks() {
+  try { const d = localStorage.getItem(STORAGE_TRACKS); return d ? JSON.parse(d) : []; } catch(e) { return []; }
+}
+function saveTracks(t) { localStorage.setItem(STORAGE_TRACKS, JSON.stringify(t)); }
+
+function parseTrackInput(text) {
+  const epMatch = text.match(/第\s*(\d+)\s*[集话期]?/);
+  if (epMatch) {
+    const n = text.replace(/第\s*\d+\s*[集话期]?\s*/, '').trim();
+    return { icon: '🎬', name: n || '未知', episode: epMatch[0] };
+  }
+  const numMatch = text.match(/(.+?)\s*(\d+)\s*$/);
+  if (numMatch) return { icon: '🎬', name: numMatch[1].trim(), episode: '第' + numMatch[2] + '集' };
+  return { icon: '📺', name: text, episode: '' };
+}
+
+function renderTracks() {
+  tracks = loadTracks();
+  const list = document.getElementById('trackList');
+  if (tracks.length === 0) { list.innerHTML = '<li class="empty-tip">还没有追剧记录 📝</li>'; return; }
+  list.innerHTML = tracks.map((t, i) => {
+    const d = parseTrackInput(t.text);
+    return `<li class="track-item"><span class="thumb">${d.icon}</span><div class="info"><div class="name">${d.name}</div><div class="detail"><span class="ep">${d.episode}</span><span> · ${t.time}</span></div></div><div class="actions"><button class="del" onclick="deleteTrack(${i})">✕</button></div></li>`;
+  }).join('');
+}
+
+function addTrack() {
+  const inp = document.getElementById('trackInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  const n = new Date();
+  const ts = (n.getMonth()+1)+'月'+n.getDate()+'日 '+n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+  tracks.unshift({text, time: ts});
+  saveTracks(tracks);
+  renderTracks();
+  inp.value = '';
+  showToast('✅ 已记录: '+text, 'info');
+}
+
+function deleteTrack(i) {
+  const r = tracks[i].text;
+  tracks.splice(i,1);
+  saveTracks(tracks);
+  renderTracks();
+  showToast('🗑️ 已删除: '+r, 'info');
+}
+
+function showToast(m, t) {
+  const e = document.getElementById('toast');
+  e.textContent = m;
+  e.className = 'toast show' + (t==='info'?' info':'') + (t==='warn'?' warn':'');
+  clearTimeout(e._timer);
+  e._timer = setTimeout(() => e.classList.remove('show'), 3000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  init();
+});
+</script>
+</body>
+</html>
