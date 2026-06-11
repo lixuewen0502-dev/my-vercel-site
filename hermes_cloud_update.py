@@ -1,46 +1,52 @@
 import os
+import requests
 from datetime import datetime
 
-# 模拟Hermes生成，先跳过API调用
-def hermes_generate(prompt):
-    return "今天也要加油！"
+def call_hermes(prompt):
+    api_key = os.getenv("HERMES_API_KEY")
+    if not api_key:
+        raise Exception("未读取到 HERMES_API_KEY，请检查 GitHub Secrets 配置")
 
-today = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-ai_text = hermes_generate("写一句适合PPnix加速网站首页的每日更新文案，简短、正能量")
+    url = "https://api.hermes-agent.ac.cn/v1/generate"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": "赫尔墨斯-2",
+        "prompt": prompt,
+        "max_tokens": 1200,
+        "temperature": 0.95
+    }
 
-new_html = f"""
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PPnix加速</title>
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #0F0F0F;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }}
-        h1 {{ font-size: 2.5rem; margin-bottom: 2rem; }}
-        .quote {{ font-size: 1.5rem; color: #4CAF50; }}
-        .time {{ margin-top: 1rem; color: #aaa; font-size: 0.9rem; }}
-    </style>
-</head>
-<body>
-    <h1>PPnix加速 · 每日自动更新</h1>
-    <p class="quote">{ai_text}</p>
-    <p class="time">更新时间：{today}</p>
-</body>
-</html>
+    res = requests.post(url, headers=headers, json=payload)
+    res.raise_for_status()
+    return res.json()["choices"][0]["text"].strip()
+
+# 获取当前时间信息
+now = datetime.now()
+update_time = now.strftime("%Y-%m-%d %H:%M:%S")
+timestamp = now.timestamp()  # 关键：生成唯一时间戳，强制AI每次生成不同内容
+
+# 给AI的指令：不限定具体功能，让它自由发挥创作全新页面
+task_prompt = f"""
+当前时间戳：{timestamp}
+请编写一份完整独立的 HTML 页面，要求：
+1. 页面标题固定为：PPnix加速
+2. 内嵌 CSS，无需外部资源，浏览器可直接打开运行
+3. 本次必须制作和历史版本功能、交互、视觉效果完全不同的页面
+4. 可自由实现各类前端功能：动画、按钮交互、特效、时钟、表单、布局切换、色彩主题等
+5. 页面底部固定一行文字：本次更新时间 {update_time}
+6. 只输出完整 HTML 代码，不要解释、不要备注、不要 markdown
+
+发挥创意，制作全新功能页面。
 """
 
-with open("PPnix加速.html", "w", encoding="utf-8") as f:
-    f.write(new_html)
+# 调用 Hermes 生成页面代码
+full_html = call_hermes(task_prompt)
 
-print("✅ 模拟更新完成，文件已写入！")
+# 写入并覆盖 PPnix加速.html 文件
+with open("PPnix加速.html", "w", encoding="utf-8") as f:
+    f.write(full_html)
+
+print("✅ 带时间戳的全新功能页面已由 Hermes 生成并更新完成")
